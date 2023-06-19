@@ -1,0 +1,13 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+AccessModifierOffset: -4
+AllowAllConstructorInitializersOnNextLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+IndentCaseLabels: false
+IndentWidth: 4
+PointerAlignment: Right
+SpacesBeforeTrailingComments: 1
+TabWidth: 4
