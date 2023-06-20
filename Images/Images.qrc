@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/Images">
+        <file>Ground.png</file>
+        <file>Water.png</file>
+    </qresource>
+</RCC>

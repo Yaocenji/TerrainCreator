@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/Shaders">
+        <file>GroundFragShader.frag</file>
+        <file>PanelVertShader.vert</file>
+        <file>WaterFragShader.frag</file>
+        <file>ScreenFragShader.frag</file>
+        <file>ScreenVertShader.vert</file>
+    </qresource>
+</RCC>
