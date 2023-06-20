@@ -19,9 +19,11 @@ float LinearizeDepth(float depth)
 void main()
 {
     vec2 texCoord = projCoord.xy / projCoord.ww / 2.0 + vec2(0.5, 0.5);
-    float groundDepth = LinearizeDepth(texture(depthBuffer, texCoord.xy).r);
+    float tmp = texture(depthBuffer, texCoord.xy).r;
+    if (tmp > 0.995) discard;
+    float groundDepth = LinearizeDepth(tmp);
     float waterDepth = LinearizeDepth(gl_FragCoord.z);
     if (groundDepth <= waterDepth) discard;
-    FragColor = vec4(0.0, 0.5, 1.0, 1 - exp((waterDepth - groundDepth) * 100));
+    FragColor = vec4(0.0, 0.4, 0.6, 1 - exp((waterDepth - groundDepth - 0.01) * 100));
 //    FragColor = vec4(texture(depthBuffer, texCoord.xy).rgb, 1);
 }

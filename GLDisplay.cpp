@@ -14,6 +14,7 @@ GLDisplay::GLDisplay(QWidget *parent) : QOpenGLWidget(parent) {
     screenVAO = nullptr;
 
     panelVertShader = nullptr;
+    groundGeomShader = nullptr;
     groundFragShader = nullptr;
     waterFragShader = nullptr;
     screenVertShader = nullptr;
@@ -34,6 +35,7 @@ GLDisplay::GLDisplay(QWidget *parent) : QOpenGLWidget(parent) {
 }
 
 void GLDisplay::initializeGL() {
+    // 摄像机参数
     dist = 1;
     theta = 0;
     phi = 1;
@@ -83,11 +85,13 @@ void GLDisplay::initializeGL() {
     glEnableVertexAttribArray(0);
 
     panelVertShader = new QOpenGLShader(QOpenGLShader::Vertex);
+    groundGeomShader = new QOpenGLShader(QOpenGLShader::Geometry);
     groundFragShader = new QOpenGLShader(QOpenGLShader::Fragment);
     waterFragShader = new QOpenGLShader(QOpenGLShader::Fragment);
     screenVertShader = new QOpenGLShader(QOpenGLShader::Vertex);
     screenFragShader = new QOpenGLShader(QOpenGLShader::Fragment);
     panelVertShader->compileSourceFile(":/Shaders/PanelVertShader.vert");
+    groundGeomShader->compileSourceFile(":/Shaders/GroundGeomShader.geom");
     groundFragShader->compileSourceFile(":/Shaders/GroundFragShader.frag");
     waterFragShader->compileSourceFile(":/Shaders/WaterFragShader.frag");
     screenVertShader->compileSourceFile(":/Shaders/ScreenVertShader.vert");
@@ -96,12 +100,14 @@ void GLDisplay::initializeGL() {
     groundShaderProgram = new QOpenGLShaderProgram();
     groundShaderProgram->create();
     groundShaderProgram->addShader(panelVertShader);
+    groundShaderProgram->addShader(groundGeomShader);
     groundShaderProgram->addShader(groundFragShader);
     groundShaderProgram->link();
 
     waterShaderProgram = new QOpenGLShaderProgram();
     waterShaderProgram->create();
     waterShaderProgram->addShader(panelVertShader);
+    waterShaderProgram->addShader(groundGeomShader);
     waterShaderProgram->addShader(waterFragShader);
     waterShaderProgram->link();
 
@@ -166,6 +172,7 @@ void GLDisplay::resizeGL(int w, int h) {
 
 void GLDisplay::paintGL() {
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+    glClearColor(0.2f, 0.8f, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);

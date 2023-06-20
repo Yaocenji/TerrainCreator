@@ -39,6 +39,7 @@ protected:
     QOpenGLVertexArrayObject *screenVAO;
     // shader
     QOpenGLShader *panelVertShader;
+    QOpenGLShader *groundGeomShader;
     QOpenGLShader *groundFragShader, *waterFragShader;
     QOpenGLShader *screenVertShader;
     QOpenGLShader *screenFragShader;
