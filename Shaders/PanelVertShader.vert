@@ -13,10 +13,12 @@ uniform sampler2D heightMap;
 
 out vec2 texCoord;
 out vec4 worldCoord;
+out vec4 projCoord;
 
 void main()
 {
     texCoord = pos / gridSize + vec2(0.5, 0.5);
-    worldCoord = view * model * vec4(pos.x, texture(heightMap, texCoord).x * maxHeight, pos.y, 1.0);
-    gl_Position = proj * worldCoord;
+    worldCoord = model * vec4(pos.x, texture(heightMap, texCoord).x * maxHeight, pos.y, 1.0);
+    projCoord = proj * view * worldCoord;
+    gl_Position = projCoord;
 }

@@ -29,21 +29,25 @@ GLDisplay::GLDisplay(QWidget *parent) : QOpenGLWidget(parent) {
     groundHeightMap = nullptr;
     waterHeightMap = nullptr;
 
-    dist = 1000;
-    theta = 0;
-    phi = 1;
-
-    model = view = proj = QMatrix4x4();
-    view.lookAt(QVector3D(dist * sin(phi) * cos(theta), dist * cos(phi),
-                          dist * sin(phi) * sin(theta)),
-                QVector3D(), QVector3D(0, 1, 0));
-    proj.perspective(45, ((float)width()) / height(), 0.1f, 10000);
-
     scaleSensitive = 0.001f;
     rotateSensitive = 0.005f;
 }
 
 void GLDisplay::initializeGL() {
+    dist = 1;
+    theta = 0;
+    phi = 1;
+
+    model = QMatrix4x4();
+    model.scale(0.001f);
+    view = QMatrix4x4();
+    view.lookAt(QVector3D(dist * sin(phi) * cos(theta), dist * cos(phi),
+                          dist * sin(phi) * sin(theta)),
+                QVector3D(), QVector3D(0, 1, 0));
+    proj = QMatrix4x4();
+    proj.perspective(45, ((float)width()) / height(), 0.1f, 10000);
+    qDebug() << proj;
+
     initializeOpenGLFunctions();
 
     generateMesh();
@@ -152,46 +156,56 @@ void GLDisplay::initializeGL() {
 }
 
 void GLDisplay::resizeGL(int w, int h) {
+    view = QMatrix4x4();
+    view.lookAt(QVector3D(dist * sin(phi) * cos(theta), dist * cos(phi),
+                          dist * sin(phi) * sin(theta)),
+                QVector3D(), QVector3D(0, 1, 0));
     proj = QMatrix4x4();
-    proj.perspective(45, ((float)w) / h, 0.1f, 10000);
+    proj.perspective(45, ((float)w) / h, 0.1f, 10);
 }
 
 void GLDisplay::paintGL() {
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
 
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 
     groundHeightMap->bind(0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthBuffer);
     groundShaderProgram->bind();
     groundShaderProgram->setUniformValue("model", model);
     groundShaderProgram->setUniformValue("view", view);
     groundShaderProgram->setUniformValue("proj", proj);
     groundShaderProgram->setUniformValue("maxHeight", terrainMaxHeight);
     groundShaderProgram->setUniformValue("gridSize", TerrainSize);
+    groundShaderProgram->setUniformValue("nearPanel", 0.1f);
+    groundShaderProgram->setUniformValue("farPanel", 10.0f);
     groundShaderProgram->setUniformValue("heightMap", 0);
+    waterShaderProgram->setUniformValue("depthBuffer", 1);
     panelVAO->bind();
     glDrawElements(GL_TRIANGLES, indicesCount(), GL_UNSIGNED_INT, 0);
 
-    //    glEnable(GL_BLEND);
-    //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //    waterHeightMap->bind(0);
-    //    glActiveTexture(GL_TEXTURE1);
-    //    glBindTexture(GL_TEXTURE_2D, depthBuffer);
-    //    waterShaderProgram->bind();
-    //    waterShaderProgram->setUniformValue("model", model);
-    //    waterShaderProgram->setUniformValue("view", view);
-    //    waterShaderProgram->setUniformValue("proj", proj);
-    //    waterShaderProgram->setUniformValue("maxHeight", terrainMaxHeight);
-    //    waterShaderProgram->setUniformValue("gridSize", TerrainSize);
-    //    waterShaderProgram->setUniformValue("nearPanel", 0.1f);
-    //    waterShaderProgram->setUniformValue("farPanel", 10000.0f);
-    //    waterShaderProgram->setUniformValue("heightMap", 0);
-    //    waterShaderProgram->setUniformValue("depthBuffer", 1);
-    //    panelVAO->bind();
-    //    glDrawElements(GL_TRIANGLES, indicesCount(), GL_UNSIGNED_INT, 0);
+    waterHeightMap->bind(0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthBuffer);
+    waterShaderProgram->bind();
+    waterShaderProgram->setUniformValue("model", model);
+    waterShaderProgram->setUniformValue("view", view);
+    waterShaderProgram->setUniformValue("proj", proj);
+    waterShaderProgram->setUniformValue("maxHeight", terrainMaxHeight);
+    waterShaderProgram->setUniformValue("gridSize", TerrainSize);
+    waterShaderProgram->setUniformValue("nearPanel", 0.1f);
+    waterShaderProgram->setUniformValue("farPanel", 10.0f);
+    waterShaderProgram->setUniformValue("heightMap", 0);
+    waterShaderProgram->setUniformValue("depthBuffer", 1);
+    panelVAO->bind();
+    glDrawElements(GL_TRIANGLES, indicesCount(), GL_UNSIGNED_INT, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
     glClear(GL_COLOR_BUFFER_BIT);
