@@ -24,5 +24,5 @@ void main()
 
     vec3 newNorm = norm / 2 + vec3(0.5, 0.5, 0.5);
     FragColor = vec4(ans, 1.0);
-//    FragColor.r = texture(heightMap, texCoord).r;
+//    FragColor.rgb = texture(heightMap, texCoord).rgb;
 }

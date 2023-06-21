@@ -6,5 +6,6 @@
         <file>ScreenFragShader.frag</file>
         <file>ScreenVertShader.vert</file>
         <file>GroundGeomShader.geom</file>
+        <file>setHeight.comp</file>
     </qresource>
 </RCC>

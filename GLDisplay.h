@@ -45,24 +45,36 @@ protected:
     QOpenGLShader *screenFragShader;
     QOpenGLShaderProgram *groundShaderProgram, *waterShaderProgram;
     QOpenGLShaderProgram *screenShaderProgram;
+    // 计算shader
+    QOpenGLShader *setHeight;
+    QOpenGLShaderProgram *setHeightProgram;
     // mvp矩阵
     QMatrix4x4 model, view, proj;
 
+    // frameBuffer，是离屏渲染的帧缓冲区
     unsigned int frameBuffer;
     unsigned int colorBuffer, depthBuffer;
 
+    // tex(storage/compute buffer)，是地形数据
+    unsigned int terrainHeightMapData;
+
+    // 两张测试用的高度贴图
     QOpenGLTexture *groundHeightMap, *waterHeightMap;
 
 protected:
+    // 摄相机参数
     float dist, theta, phi;
+    float nearPanel, farPanel;
     float scaleSensitive, rotateSensitive;
     QPoint prevMousePosition;
 
 protected:
+    // GL窗口内建函数
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
+    // 摄像机控制函数
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

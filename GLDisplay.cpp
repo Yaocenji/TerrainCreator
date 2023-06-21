@@ -39,6 +39,8 @@ void GLDisplay::initializeGL() {
     dist = 1;
     theta = 0;
     phi = 1;
+    nearPanel = 0.01f;
+    farPanel = 10.0f;
 
     model = QMatrix4x4();
     model.scale(0.001f);
@@ -47,7 +49,7 @@ void GLDisplay::initializeGL() {
                           dist * sin(phi) * sin(theta)),
                 QVector3D(), QVector3D(0, 1, 0));
     proj = QMatrix4x4();
-    proj.perspective(45, ((float)width()) / height(), 0.1f, 10000);
+    proj.perspective(45, ((float)width()) / height(), nearPanel, farPanel);
     qDebug() << proj;
 
     initializeOpenGLFunctions();
@@ -159,6 +161,36 @@ void GLDisplay::initializeGL() {
     waterHeightMap->setWrapMode(QOpenGLTexture::ClampToEdge);
     waterHeightMap->setMinMagFilters(QOpenGLTexture::Linear,
                                      QOpenGLTexture::Linear);
+
+    // 地形计算：buffer与shader
+    setHeight = new QOpenGLShader(QOpenGLShader::Compute);
+    setHeight->compileSourceFile(":/Shaders/setHeight.comp");
+
+    setHeightProgram = new QOpenGLShaderProgram();
+    setHeightProgram->create();
+    setHeightProgram->addShader(setHeight);
+    setHeightProgram->link();
+
+    // terrainHeightMapData = new QOpenGLTexture(QOpenGLTexture::Target2D);
+    glGenTextures(1, &terrainHeightMapData);
+    glBindTexture(GL_TEXTURE_2D, terrainHeightMapData);
+    glTexStorage2D(GL_TEXTURE_2D, 8, GL_RGBA32F, terrainGrid, terrainGrid);
+    qDebug() << glGetError();
+    // 填充地形buffer：
+    // 1、绑定地形buffer到0纹理位置
+    glBindImageTexture(0, terrainHeightMapData, 0, GL_FALSE, 0, GL_READ_WRITE,
+                       GL_RGBA32F);
+
+    // 2、绑定计算着色器
+    setHeightProgram->bind();
+
+    // 2、运行计算着色器
+    glDispatchCompute(32, 32, 1);
+
+    // 检查错误
+    // 地形数据绑定到2的纹理位置
+    glBindImageTexture(2, terrainHeightMapData, 0, GL_FALSE, 0, GL_READ_WRITE,
+                       GL_RGBA32F);
 }
 
 void GLDisplay::resizeGL(int w, int h) {
@@ -167,7 +199,7 @@ void GLDisplay::resizeGL(int w, int h) {
                           dist * sin(phi) * sin(theta)),
                 QVector3D(), QVector3D(0, 1, 0));
     proj = QMatrix4x4();
-    proj.perspective(45, ((float)w) / h, 0.1f, 10);
+    proj.perspective(45, ((float)w) / h, nearPanel, farPanel);
 }
 
 void GLDisplay::paintGL() {
@@ -187,8 +219,8 @@ void GLDisplay::paintGL() {
     groundShaderProgram->setUniformValue("proj", proj);
     groundShaderProgram->setUniformValue("maxHeight", terrainMaxHeight);
     groundShaderProgram->setUniformValue("gridSize", TerrainSize);
-    groundShaderProgram->setUniformValue("nearPanel", 0.1f);
-    groundShaderProgram->setUniformValue("farPanel", 10.0f);
+    groundShaderProgram->setUniformValue("nearPanel", nearPanel);
+    groundShaderProgram->setUniformValue("farPanel", farPanel);
     groundShaderProgram->setUniformValue("heightMap", 0);
     waterShaderProgram->setUniformValue("depthBuffer", 1);
     panelVAO->bind();
@@ -207,8 +239,8 @@ void GLDisplay::paintGL() {
     waterShaderProgram->setUniformValue("proj", proj);
     waterShaderProgram->setUniformValue("maxHeight", terrainMaxHeight);
     waterShaderProgram->setUniformValue("gridSize", TerrainSize);
-    waterShaderProgram->setUniformValue("nearPanel", 0.1f);
-    waterShaderProgram->setUniformValue("farPanel", 10.0f);
+    waterShaderProgram->setUniformValue("nearPanel", nearPanel);
+    waterShaderProgram->setUniformValue("farPanel", farPanel);
     waterShaderProgram->setUniformValue("heightMap", 0);
     waterShaderProgram->setUniformValue("depthBuffer", 1);
     panelVAO->bind();
