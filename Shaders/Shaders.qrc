@@ -7,5 +7,7 @@
         <file>ScreenVertShader.vert</file>
         <file>GroundGeomShader.geom</file>
         <file>setHeight.comp</file>
+        <file>Erosion.comp</file>
+        <file>SetPixelData.comp</file>
     </qresource>
 </RCC>

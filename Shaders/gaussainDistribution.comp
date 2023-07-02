@@ -1,0 +1,27 @@
+#version 450 core
+
+layout (local_size_x = 32, local_size_y = 32) in;
+
+// 存储高斯卷积核
+layout (binding = 0, rgba32f) uniform image2D gaussainData;
+
+// 通过cpu传递进入一个核大小
+// 其实是半径，核大小=半径 * 2 + 1
+uniform int radius;
+// kernelSize必然是奇数
+
+const float PI = 3.14159265359;
+
+void main(){
+    // 判定全局位置：是否在数据范围中
+    // 如果不在，那么结束
+    int kernelSize = radius * 2 + 1;
+    if (gl_GlobalInvocationID.x >= kernelSize || gl_GlobalInvocationID.y >= kernelSize)
+        return;
+    // 计算该点与核中心位置的距离
+    float dist = sqrt(pow(gl_GlobalInvocationID.x - radius, 2.0) + pow(gl_GlobalInvocationID.y - radius, 2.0));
+    // 根据距离计算值
+    float ans = exp(- dist * dist / 2.0) / sqrt(2.0 * PI);
+
+    imageStore(gaussainData, ivec2(gl_GlobalInvocationID.xy), vec4(ans, ans,ans, ans));
+}

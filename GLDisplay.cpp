@@ -5,6 +5,7 @@
 #include <QtMath>
 
 GLDisplay::GLDisplay(QWidget *parent) : QOpenGLWidget(parent) {
+    // 将所有将要在堆内存中创建的成员指针初始化为0
     panelVertices = nullptr;
     panelIndices = nullptr;
     panelVBO = nullptr;
@@ -23,9 +24,21 @@ GLDisplay::GLDisplay(QWidget *parent) : QOpenGLWidget(parent) {
     waterShaderProgram = nullptr;
     screenShaderProgram = nullptr;
 
+    setHeight = nullptr;
+    setHeightProgram = nullptr;
+    erosion = nullptr;
+    erosionProgram = nullptr;
+    gaussain = nullptr;
+    gaussainProgram = nullptr;
+    setPixel = nullptr;
+    setPixelProgram = nullptr;
+
     frameBuffer = 0;
     colorBuffer = 0;
     depthBuffer = 0;
+
+    terrainHeightMapData = 0;
+    // gaussainKernelData = 0;
 
     groundHeightMap = nullptr;
     waterHeightMap = nullptr;
@@ -171,11 +184,31 @@ void GLDisplay::initializeGL() {
     setHeightProgram->addShader(setHeight);
     setHeightProgram->link();
 
-    // terrainHeightMapData = new QOpenGLTexture(QOpenGLTexture::Target2D);
+    // 侵蚀
+    erosion = new QOpenGLShader(QOpenGLShader::Compute);
+    erosion->compileSourceFile(":/Shaders/Erosion.comp");
+
+    erosionProgram = new QOpenGLShaderProgram();
+    erosionProgram->create();
+    erosionProgram->addShader(erosion);
+    erosionProgram->link();
+
+    // 设置像素着色器
+    setPixel = new QOpenGLShader(QOpenGLShader::Compute);
+    setPixel->compileSourceFile(":/Shaders/SetPixelData.comp");
+
+    setPixelProgram = new QOpenGLShaderProgram();
+    setPixelProgram->create();
+    setPixelProgram->addShader(setPixel);
+    setPixelProgram->link();
+
+    qDebug() << glGetError();
+
+    // 计算buffer（是image/texure不是render buffer）
     glGenTextures(1, &terrainHeightMapData);
     glBindTexture(GL_TEXTURE_2D, terrainHeightMapData);
     glTexStorage2D(GL_TEXTURE_2D, 8, GL_RGBA32F, terrainGrid, terrainGrid);
-    qDebug() << glGetError();
+
     // 填充地形buffer：
     // 1、绑定地形buffer到0纹理位置
     glBindImageTexture(0, terrainHeightMapData, 0, GL_FALSE, 0, GL_READ_WRITE,
@@ -187,10 +220,39 @@ void GLDisplay::initializeGL() {
     // 2、运行计算着色器
     glDispatchCompute(32, 32, 1);
 
-    // 检查错误
-    // 地形数据绑定到2的纹理位置
-    glBindImageTexture(2, terrainHeightMapData, 0, GL_FALSE, 0, GL_READ_WRITE,
+    //     完成地形侵蚀
+    //     检查错误
+    //     地形数据绑定到0的纹理位置
+    //     绑定计算buffer
+    glBindImageTexture(0, terrainHeightMapData, 0, GL_FALSE, 0, GL_READ_WRITE,
                        GL_RGBA32F);
+    // 绑定计算着色器
+    erosionProgram->bind();
+    // 传参
+    erosionProgram->setUniformValue("Grid", terrainGrid);
+    erosionProgram->setUniformValue("Size", TerrainSize);
+    erosionProgram->setUniformValue("Height", terrainMaxHeight);
+
+    erosionProgram->setUniformValue("water_len", 600);
+    erosionProgram->setUniformValue("p_inertia", 0.603f);
+    erosionProgram->setUniformValue("p_minSlope", 0.0001f);
+    erosionProgram->setUniformValue("p_capacity", 4.0f);
+    erosionProgram->setUniformValue("p_deposition", 0.418f);
+    erosionProgram->setUniformValue("p_erosion", 0.622f);
+    erosionProgram->setUniformValue("p_gravity", 1.27f);
+    erosionProgram->setUniformValue("p_evaporation", 0.039f);
+    erosionProgram->setUniformValue("p_radius", 5.0f);
+    erosionProgram->setUniformValue("p_hardness", 0.517f);
+    erosionProgram->setUniformValue("p_velocity", 2.42f);
+
+    erosionProgram->setUniformValue("time", 0.0f);
+
+    qDebug() << glGetError();
+
+    for (int i = 5; i < 500; ++i) {
+        erosionProgram->setUniformValue("time", (float)i * 0.5623f + 5);
+        glDispatchCompute(32, 1, 1);
+    }
 }
 
 void GLDisplay::resizeGL(int w, int h) {
@@ -327,4 +389,14 @@ unsigned int GLDisplay::verticiesCount() const {
 
 unsigned int GLDisplay::indicesCount() const {
     return (terrainGrid - 1) * (terrainGrid - 1) * 6;
+}
+
+void GLDisplay::SetImagePixelRGBA32F(unsigned int data, float value, int posx,
+                                     int posy) {
+    glBindImageTexture(0, data, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    setPixelProgram->bind();
+    setPixelProgram->setUniformValue("value", value);
+    setPixelProgram->setUniformValue("posx", posx);
+    setPixelProgram->setUniformValue("posy", posy);
+    glDispatchCompute(1, 1, 1);
 }

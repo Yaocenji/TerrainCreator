@@ -66,5 +66,5 @@ void main(){
     ans += perlin(vec2(gl_GlobalInvocationID.xy) / 8.0) / 128.0;
     ans += perlin(vec2(gl_GlobalInvocationID.xy) / 4.0) / 256.0;
     ans += perlin(vec2(gl_GlobalInvocationID.xy) / 2.0) / 512.0;
-    imageStore(data, ivec2(gl_GlobalInvocationID.xy), vec4(ans, ans,ans, ans));
+    imageStore(data, ivec2(gl_GlobalInvocationID.xy), 256 * vec4(ans, ans,ans, ans));
 }

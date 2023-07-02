@@ -27,6 +27,31 @@ public:
     float terrainMaxHeight = 256;
     // 最低海拔高度是0
 
+public:
+    // 侵蚀算法参数：
+    // 流水最大长度
+    int water_len = 10;
+    // 流水惯性参数（0~1）
+    float p_inertia = 0.4;
+    // 最小坡度
+    float p_minSlope = 1.0;
+    // 携带容量
+    float p_capacity = 8.0;
+    // 沉积系数（0~1）")
+    float p_deposition = 0.1;
+    // 侵蚀系数（0~1）")
+    float p_erosion = 0.75;
+    // 重力系数（0~10）")
+    float p_gravity = 1.0;
+    // 蒸发系数（0~1）")
+    float p_evaporation = 0.002;
+    // 侵蚀半径（1~50）")
+    float p_radius = 2.0;
+    // 硬度系数（0~1）
+    float p_hardness = 1.0;
+    // 初始速度（0~10）")
+    float p_velocity = 1.0;
+
 protected:
     // 顶点数据数组
     float *panelVertices;
@@ -45,9 +70,22 @@ protected:
     QOpenGLShader *screenFragShader;
     QOpenGLShaderProgram *groundShaderProgram, *waterShaderProgram;
     QOpenGLShaderProgram *screenShaderProgram;
+
     // 计算shader
+    // 设置高度
     QOpenGLShader *setHeight;
     QOpenGLShaderProgram *setHeightProgram;
+    // 侵蚀
+    QOpenGLShader *erosion;
+    QOpenGLShaderProgram *erosionProgram;
+    // 高斯分布
+    QOpenGLShader *gaussain;
+    QOpenGLShaderProgram *gaussainProgram;
+    // 设置buffer像素
+    QOpenGLShader *setPixel;
+    QOpenGLShaderProgram *setPixelProgram;
+
+    //
     // mvp矩阵
     QMatrix4x4 model, view, proj;
 
@@ -84,6 +122,8 @@ private:
     void generateMesh();
     unsigned int verticiesCount() const;
     unsigned int indicesCount() const;
+    void SetImagePixelRGBA32F(unsigned int data, float value, int posx,
+                              int posy);
 };
 
 #endif // GLDISPLAY_H
