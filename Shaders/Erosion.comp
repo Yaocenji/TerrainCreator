@@ -93,10 +93,10 @@ void SetHeightBufferBilinear(int grid_num, float x, float y, float value)
     float Value10 = value * u * (1.0 - v);
     float Value11 = value * u * v;
 
-    SetHeightData(xInt, yInt, GetHeightData(xInt, yInt) + Value00);
-    SetHeightData(xInt, yIntp, GetHeightData(xInt, yIntp) + Value01);
-    SetHeightData(xIntp, yInt, GetHeightData(xIntp, yInt) + Value10);
-    SetHeightData(xIntp, yIntp, GetHeightData(xIntp, yIntp) + Value11);
+    SetHeightData(xInt, yInt, GetHeightData(xInt, yInt));// + Value00);
+    SetHeightData(xInt, yIntp, GetHeightData(xInt, yIntp));// + Value01);
+    SetHeightData(xIntp, yInt, GetHeightData(xIntp, yInt));// + Value10);
+    SetHeightData(xIntp, yIntp, GetHeightData(xIntp, yIntp));// + Value11);
 
     // SetHeightData(xInt, yInt, MyClamp(0.0, Height, GetHeightData(xInt, yInt)));
     // SetHeightData(xInt, yIntp, MyClamp(0.0, Height, GetHeightData(xInt, yIntp)));
@@ -260,7 +260,7 @@ void main ()
 
     SetHeightData(int(d.pos.x * Grid), int(d.pos.y * Grid), 500);
     return;
-
+/*
     d.water = 1.0;
     d.vel = p_velocity;
     d.dir.x = 0;
@@ -384,6 +384,6 @@ void main ()
             break;
         }
     }
-    
+    */
 }
 

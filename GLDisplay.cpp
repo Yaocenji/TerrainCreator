@@ -249,7 +249,7 @@ void GLDisplay::initializeGL() {
 
     qDebug() << glGetError();
 
-    for (int i = 5; i < 5000; ++i) {
+    for (int i = 5; i < 500; ++i) {
         erosionProgram->setUniformValue("time", (float)i * 0.5623f + 5);
         glDispatchCompute(32, 1, 1);
     }
